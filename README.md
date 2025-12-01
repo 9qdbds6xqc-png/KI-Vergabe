@@ -1,73 +1,92 @@
-# Welcome to your Lovable project
+# KI Vergabe
 
-## Project info
+Intelligente Lösungen für Beschaffung - Chat-basierte Q&A-Plattform mit KI-Unterstützung.
 
-**URL**: https://lovable.dev/projects/e58ab12d-8cf8-47e9-8ffd-2458e7b604c4
+## Features
 
-## How can I edit this code?
+- 🤖 KI-gestützte Beantwortung von Fragen basierend auf PDF-Dokumenten
+- 📄 PDF-Upload und automatische Textextraktion
+- 💬 Interaktive Chat-Oberfläche
+- 📊 Backlog-System zur Nachverfolgung aller Gespräche
+- 🔒 Preisinformationen werden über Kontaktformular angefordert
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend:** React 18, TypeScript, Vite
+- **UI:** shadcn/ui, Tailwind CSS
+- **Routing:** React Router
+- **AI:** OpenAI API (GPT-3.5-turbo)
+- **PDF Processing:** PDF.js
+- **Hosting:** GitHub Pages
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e58ab12d-8cf8-47e9-8ffd-2458e7b604c4) and start prompting.
+## Lokale Entwicklung
 
-Changes made via Lovable will be committed automatically to this repo.
+### Voraussetzungen
 
-**Use your preferred IDE**
+- Node.js 18+ und npm
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```bash
+# Repository klonen
+git clone https://github.com/9qdbds6xqc-png/trafosanf-remake.git
+cd trafosanf-remake
 
-Follow these steps:
+# Dependencies installieren
+npm install
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Development Server starten
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Die Anwendung läuft dann unter `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Umgebungsvariablen
 
-**Use GitHub Codespaces**
+Erstelle eine `.env` Datei im Root-Verzeichnis:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```env
+VITE_OPENAI_API_KEY=dein-openai-api-key
+```
 
-## What technologies are used for this project?
+Siehe `.env.example` für ein Beispiel.
 
-This project is built with:
+## Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Die Website wird automatisch über GitHub Actions auf GitHub Pages deployed.
 
-## How can I deploy this project?
+- **Production URL:** https://ki-vergabe.de
+- **GitHub Pages URL:** https://9qdbds6xqc-png.github.io/trafosanf-remake/
 
-Simply open [Lovable](https://lovable.dev/projects/e58ab12d-8cf8-47e9-8ffd-2458e7b604c4) and click on Share -> Publish.
+### Deployment Workflow
 
-## Can I connect a custom domain to my Lovable project?
+Bei jedem Push auf `main` wird automatisch:
+1. Das Projekt gebaut
+2. Die Distribution auf GitHub Pages deployed
 
-Yes, you can!
+## Projektstruktur
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```
+src/
+├── components/     # React Komponenten
+│   ├── ChatInterface.tsx
+│   ├── ChatMessage.tsx
+│   ├── PDFUpload.tsx
+│   └── PricingRequestDialog.tsx
+├── lib/            # Utilities
+│   ├── openai.ts       # OpenAI API Integration
+│   ├── pdfExtractor.ts # PDF Text Extraction
+│   └── backlog.ts      # Backlog Management
+└── pages/          # Seiten
+    ├── Questions.tsx   # Hauptseite (Chat)
+    └── Backlog.tsx     # Backlog Übersicht
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Dokumentation
+
+- [Chat Setup Guide](./CHAT_SETUP.md)
+- [Deployment Guide](./DEPLOYMENT_KI_VERGABE.md)
+
+## Lizenz
+
+Proprietary - Alle Rechte vorbehalten
