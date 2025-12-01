@@ -6,14 +6,15 @@ import { extractTextFromPDF } from "@/lib/pdfExtractor";
 
 interface PDFUploadProps {
   onPDFLoaded: (text: string, fileName: string) => void;
-  currentPDFName?: string;
+  currentPDFNames?: string[];
   className?: string;
 }
 
-export const PDFUpload = ({ onPDFLoaded, currentPDFName, className }: PDFUploadProps) => {
+export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; text: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
@@ -39,7 +40,16 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFName, className }: PDFUploadP
         return;
       }
 
-      onPDFLoaded(text, file.name);
+      // Add to uploaded files list
+      const newFile = { name: file.name, text };
+      const updatedFiles = [...uploadedFiles, newFile];
+      setUploadedFiles(updatedFiles);
+
+      // Combine all PDF texts
+      const combinedText = updatedFiles.map(f => f.text).join('\n\n---\n\n');
+      const combinedNames = updatedFiles.map(f => f.name).join(', ');
+      
+      onPDFLoaded(combinedText, combinedNames);
       setError(null);
     } catch (err) {
       console.error("Error processing PDF:", err);
@@ -53,13 +63,32 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFName, className }: PDFUploadP
     }
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
 
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFile(file);
+    const files = Array.from(e.dataTransfer.files).filter(
+      f => f.type === "application/pdf"
+    );
+    
+    if (files.length === 0) {
+      setError("Bitte wählen Sie PDF-Dateien aus.");
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) {
+          setError(`${file.name} ist zu groß. Maximum: 10MB`);
+          continue;
+        }
+        await handleFile(file);
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -73,36 +102,89 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFName, className }: PDFUploadP
     setIsDragging(false);
   };
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFile(file);
+  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(
+      f => f.type === "application/pdf"
+    );
+    
+    if (files.length === 0) {
+      setError("Bitte wählen Sie PDF-Dateien aus.");
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) {
+          setError(`${file.name} ist zu groß. Maximum: 10MB`);
+          continue;
+        }
+        await handleFile(file);
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleRemove = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+  const handleRemove = (fileNameToRemove?: string) => {
+    if (fileNameToRemove) {
+      // Remove specific file
+      const updatedFiles = uploadedFiles.filter(f => f.name !== fileNameToRemove);
+      setUploadedFiles(updatedFiles);
+      
+      if (updatedFiles.length === 0) {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        onPDFLoaded("", "");
+      } else {
+        const combinedText = updatedFiles.map(f => f.text).join('\n\n---\n\n');
+        const combinedNames = updatedFiles.map(f => f.name).join(', ');
+        onPDFLoaded(combinedText, combinedNames);
+      }
+    } else {
+      // Remove all files
+      setUploadedFiles([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      onPDFLoaded("", "");
     }
-    onPDFLoaded("", "");
     setError(null);
   };
 
   return (
     <div className={cn("space-y-2", className)}>
-      {currentPDFName ? (
-        <div className="flex items-center gap-2 p-3 border border-border rounded-md bg-muted/50">
-          <FileText className="h-4 w-4 text-accent flex-shrink-0" />
-          <span className="text-sm flex-1 truncate">{currentPDFName}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={handleRemove}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+      {currentPDFNames && currentPDFNames.length > 0 ? (
+        <div className="space-y-2">
+          {currentPDFNames.map((fileName, index) => (
+            <div key={index} className="flex items-center gap-2 p-3 border border-border rounded-md bg-muted/50">
+              <FileText className="h-4 w-4 text-accent flex-shrink-0" />
+              <span className="text-sm flex-1 truncate">{fileName}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => handleRemove(fileName)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          {currentPDFNames.length > 1 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => handleRemove()}
+            >
+              Alle PDFs entfernen
+            </Button>
+          )}
         </div>
       ) : (
         <div
@@ -122,6 +204,7 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFName, className }: PDFUploadP
             ref={fileInputRef}
             type="file"
             accept=".pdf"
+            multiple
             onChange={handleFileInput}
             className="hidden"
             disabled={isProcessing}
@@ -138,13 +221,13 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFName, className }: PDFUploadP
             <>
               <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
               <p className="text-sm font-medium mb-1">
-                PDF-Dokument hochladen
+                PDF-Dokument(e) hochladen
               </p>
               <p className="text-xs text-muted-foreground">
-                Klicken Sie hier oder ziehen Sie eine PDF-Datei hinein
+                Klicken Sie hier oder ziehen Sie PDF-Dateien hinein
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Maximal 10MB
+                Mehrere PDFs möglich • Maximal 10MB pro Datei
               </p>
             </>
           )}

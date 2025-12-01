@@ -32,7 +32,7 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [pdfContext, setPdfContext] = useState<string>(initialPDFContext || "");
-  const [pdfFileName, setPdfFileName] = useState<string>("");
+  const [pdfFileNames, setPdfFileNames] = useState<string[]>([]);
   const [showPricingDialog, setShowPricingDialog] = useState(false);
   const [pendingPricingQuestion, setPendingPricingQuestion] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -41,15 +41,20 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
   // Update welcome message when PDF is loaded
   useEffect(() => {
     if (pdfContext && pdfContext.trim().length > 0) {
+      const fileNamesText = pdfFileNames.length > 0 
+        ? pdfFileNames.length === 1 
+          ? `dem Dokument "${pdfFileNames[0]}"`
+          : `den Dokumenten: ${pdfFileNames.join(', ')}`
+        : "dem Dokument";
       setMessages([
         {
           id: "1",
           role: "assistant",
-          content: `PDF erfolgreich geladen! Ich kann jetzt Fragen basierend auf dem Dokument "${pdfFileName}" beantworten. Was möchten Sie wissen?`,
+          content: `PDF(s) erfolgreich geladen! Ich kann jetzt Fragen basierend auf ${fileNamesText} beantworten. Was möchten Sie wissen?`,
         },
       ]);
     }
-  }, [pdfContext, pdfFileName]);
+  }, [pdfContext, pdfFileNames]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -64,9 +69,10 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
     }
   }, [input]);
 
-  const handlePDFLoaded = (text: string, fileName: string) => {
+  const handlePDFLoaded = (text: string, fileNames: string) => {
     setPdfContext(text);
-    setPdfFileName(fileName);
+    const names = fileNames ? fileNames.split(',').map(n => n.trim()) : [];
+    setPdfFileNames(names);
     
     if (!text || text.trim().length === 0) {
       setMessages([
@@ -158,7 +164,7 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
       addBacklogEntry(
         userMessage.content,
         result.answer,
-        pdfFileName || undefined,
+        pdfFileNames.join(', ') || undefined,
         result.isPricingQuestion
       );
     } catch (error) {
@@ -187,7 +193,7 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
       addBacklogEntry(
         userMessage.content,
         errorMessage,
-        pdfFileName || undefined,
+        pdfFileNames.join(', ') || undefined,
         false
       );
 
@@ -215,7 +221,7 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
         <div className="border-b border-border p-4">
           <PDFUpload 
             onPDFLoaded={handlePDFLoaded}
-            currentPDFName={pdfFileName}
+            currentPDFNames={pdfFileNames}
           />
         </div>
 
