@@ -1,23 +1,11 @@
 import { useState } from "react";
 import { Menu, X, Globe } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const mainNav = [
-  { name: "Batterie Management Systeme", href: "#" },
-  { name: "Messtechnik", href: "#" },
-  { name: "Trafosanfteinschalter", href: "#", active: true },
-  { name: "E²MS", href: "#" },
-  { name: "Jobs", href: "#" },
-  { name: "Über uns", href: "#" },
-  { name: "Kundentag", href: "#" },
-];
+const mainNav: Array<{ name: string; href: string; active?: boolean }> = [];
 
 const subNav = [
-  { name: "Anwendungen", href: "#anwendungen" },
-  { name: "Produkte", href: "#produkte" },
-  { name: "Kundenlösungen", href: "#kundenloesungen" },
-  { name: "Expertenwissen", href: "#" },
-  { name: "Kontakt", href: "#kontakt" },
-  { name: "Unsere Partner", href: "#" },
+  { name: "Backlog", href: "/backlog" },
 ];
 
 export const Header = () => {
@@ -56,11 +44,9 @@ export const Header = () => {
 
             {/* Right side */}
             <div className="flex items-center space-x-4">
-              <span className="hidden lg:block text-white text-sm">intelligent electronics</span>
-              <Globe className="text-white w-5 h-5 cursor-pointer hover:text-primary transition-colors" />
               {/* Logo */}
               <div className="text-white font-bold text-2xl tracking-tight">
-                FSM<sup className="text-xs">®</sup>
+                KI Vergabe
               </div>
             </div>
           </div>
@@ -72,13 +58,23 @@ export const Header = () => {
         <div className="fsm-container">
           <nav className="hidden md:flex items-center space-x-8 py-4">
             {subNav.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="text-foreground font-medium hover:text-primary transition-colors"
-              >
-                {item.name}
-              </a>
+              item.href.startsWith('/') ? (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="text-foreground font-medium hover:text-primary transition-colors"
+                >
+                  {item.name}
+                </Link>
+              ) : (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-foreground font-medium hover:text-primary transition-colors"
+                >
+                  {item.name}
+                </a>
+              )
             ))}
           </nav>
         </div>
@@ -101,13 +97,23 @@ export const Header = () => {
             ))}
             <div className="border-t border-white/20 pt-4 mt-4">
               {subNav.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="block px-4 py-2 text-sm text-white/80"
-                >
-                  {item.name}
-                </a>
+                item.href.startsWith('/') ? (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="block px-4 py-2 text-sm text-white/80"
+                  >
+                    {item.name}
+                  </Link>
+                ) : (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className="block px-4 py-2 text-sm text-white/80"
+                  >
+                    {item.name}
+                  </a>
+                )
               ))}
             </div>
           </nav>

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Phone, Mail } from "lucide-react";
+import { ArrowRight, Phone, Mail, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const contacts = [
   {
@@ -57,10 +58,19 @@ export const ContactSection = () => {
           ))}
         </div>
 
-        <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-          Zum Kontaktformular
-          <ArrowRight className="ml-2 w-4 h-4" />
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link to="/questions">
+            <Button variant="default" className="w-full sm:w-auto">
+              <MessageCircle className="mr-2 w-4 h-4" />
+              Fragen stellen (Chat)
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
+          <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground w-full sm:w-auto">
+            Zum Kontaktformular
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </section>
   );
