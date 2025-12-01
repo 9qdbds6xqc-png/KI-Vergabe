@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,49 +17,43 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; text: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = async (file: File) => {
+  // Sync uploadedFiles with currentPDFNames from parent
+  useEffect(() => {
+    if (currentPDFNames.length === 0 && uploadedFiles.length > 0) {
+      setUploadedFiles([]);
+    }
+  }, [currentPDFNames]);
+
+  const handleFile = async (file: File, existingFiles: { name: string; text: string }[] = []): Promise<{ name: string; text: string } | null> => {
     if (file.type !== "application/pdf") {
       setError("Bitte wählen Sie eine PDF-Datei aus.");
-      return;
+      return null;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      setError("Die PDF-Datei ist zu groß. Maximum: 10MB");
-      return;
+      setError(`${file.name} ist zu groß. Maximum: 10MB`);
+      return null;
     }
 
-    setIsProcessing(true);
     setError(null);
 
     try {
       const text = await extractTextFromPDF(file);
       
       if (!text || text.trim().length === 0) {
-        setError("Die PDF-Datei konnte nicht gelesen werden oder ist leer.");
-        setIsProcessing(false);
-        return;
+        setError(`${file.name} konnte nicht gelesen werden oder ist leer.`);
+        return null;
       }
 
-      // Add to uploaded files list
-      const newFile = { name: file.name, text };
-      const updatedFiles = [...uploadedFiles, newFile];
-      setUploadedFiles(updatedFiles);
-
-      // Combine all PDF texts
-      const combinedText = updatedFiles.map(f => f.text).join('\n\n---\n\n');
-      const combinedNames = updatedFiles.map(f => f.name).join(', ');
-      
-      onPDFLoaded(combinedText, combinedNames);
-      setError(null);
+      return { name: file.name, text };
     } catch (err) {
       console.error("Error processing PDF:", err);
       setError(
         err instanceof Error 
-          ? err.message 
-          : "Fehler beim Verarbeiten der PDF-Datei. Bitte versuchen Sie es erneut."
+          ? `${file.name}: ${err.message}` 
+          : `Fehler beim Verarbeiten von ${file.name}. Bitte versuchen Sie es erneut.`
       );
-    } finally {
-      setIsProcessing(false);
+      return null;
     }
   };
 
@@ -80,12 +74,20 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
     setError(null);
 
     try {
+      const processedFiles: { name: string; text: string }[] = [...uploadedFiles];
+      
       for (const file of files) {
-        if (file.size > 10 * 1024 * 1024) {
-          setError(`${file.name} ist zu groß. Maximum: 10MB`);
-          continue;
+        const result = await handleFile(file, processedFiles);
+        if (result) {
+          processedFiles.push(result);
         }
-        await handleFile(file);
+      }
+
+      if (processedFiles.length > uploadedFiles.length) {
+        setUploadedFiles(processedFiles);
+        const combinedText = processedFiles.map(f => f.text).join('\n\n---\n\n');
+        const combinedNames = processedFiles.map(f => f.name).join(', ');
+        onPDFLoaded(combinedText, combinedNames);
       }
     } finally {
       setIsProcessing(false);
@@ -116,15 +118,27 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
     setError(null);
 
     try {
+      const processedFiles: { name: string; text: string }[] = [...uploadedFiles];
+      
       for (const file of files) {
-        if (file.size > 10 * 1024 * 1024) {
-          setError(`${file.name} ist zu groß. Maximum: 10MB`);
-          continue;
+        const result = await handleFile(file, processedFiles);
+        if (result) {
+          processedFiles.push(result);
         }
-        await handleFile(file);
+      }
+
+      if (processedFiles.length > uploadedFiles.length) {
+        setUploadedFiles(processedFiles);
+        const combinedText = processedFiles.map(f => f.text).join('\n\n---\n\n');
+        const combinedNames = processedFiles.map(f => f.name).join(', ');
+        onPDFLoaded(combinedText, combinedNames);
       }
     } finally {
       setIsProcessing(false);
+      // Reset file input to allow selecting same files again
+      if (e.target) {
+        e.target.value = '';
+      }
     }
   };
 
