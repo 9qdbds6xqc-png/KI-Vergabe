@@ -2,6 +2,7 @@
 // This runs server-side, so the password is not exposed in client code
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createAdminTokenFromPassword } from './_utils/admin-token';
 
 // Password stored in environment variable (not in code)
 const CORRECT_PASSWORD = process.env.ADMIN_PASSWORD || 'Meryem';
@@ -47,9 +48,11 @@ export default async function handler(
 
     // Compare password (case-sensitive)
     if (password === CORRECT_PASSWORD) {
+      const token = createAdminTokenFromPassword(password);
       return res.status(200).json({ 
         success: true,
-        message: 'Authentication successful'
+        message: 'Authentication successful',
+        token
       });
     } else {
       // Add small delay to prevent brute force

@@ -3,10 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Upload, FileText, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { extractTextFromPDF } from "@/lib/pdfExtractor";
-import { savePDFs } from "@/lib/pdfStorage";
+export interface UploadedPDF {
+  name: string;
+  text: string;
+  file: File;
+  size: number;
+}
 
 interface PDFUploadProps {
-  onPDFLoaded: (text: string, fileName: string) => void;
+  onPDFLoaded: (data: { text: string; fileNames: string[]; files: UploadedPDF[] }) => void;
   currentPDFNames?: string[];
   className?: string;
 }
@@ -15,7 +20,7 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; text: string }[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedPDF[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync uploadedFiles with currentPDFNames from parent
@@ -23,9 +28,9 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
     if (currentPDFNames.length === 0 && uploadedFiles.length > 0) {
       setUploadedFiles([]);
     }
-  }, [currentPDFNames]);
+  }, [currentPDFNames.length, uploadedFiles.length]);
 
-  const handleFile = async (file: File, existingFiles: { name: string; text: string }[] = []): Promise<{ name: string; text: string } | null> => {
+  const handleFile = async (file: File): Promise<UploadedPDF | null> => {
     if (file.type !== "application/pdf") {
       setError("Bitte wählen Sie eine PDF-Datei aus.");
       return null;
@@ -46,7 +51,7 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
         return null;
       }
 
-      return { name: file.name, text };
+      return { name: file.name, text, file, size: file.size };
     } catch (err) {
       console.error("Error processing PDF:", err);
       setError(
@@ -75,10 +80,10 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
     setError(null);
 
     try {
-      const processedFiles: { name: string; text: string }[] = [...uploadedFiles];
+      const processedFiles: UploadedPDF[] = [...uploadedFiles];
       
       for (const file of files) {
-        const result = await handleFile(file, processedFiles);
+        const result = await handleFile(file);
         if (result) {
           processedFiles.push(result);
         }
@@ -87,10 +92,8 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
       if (processedFiles.length > uploadedFiles.length) {
         setUploadedFiles(processedFiles);
         const combinedText = processedFiles.map(f => f.text).join('\n\n---\n\n');
-        const combinedNames = processedFiles.map(f => f.name).join(', ');
-        const namesArray = combinedNames ? combinedNames.split(',').map(n => n.trim()) : [];
-        savePDFs(combinedText, namesArray);
-        onPDFLoaded(combinedText, combinedNames);
+        const nameArray = processedFiles.map(f => f.name);
+        onPDFLoaded({ text: combinedText, fileNames: nameArray, files: processedFiles });
       }
     } finally {
       setIsProcessing(false);
@@ -121,10 +124,10 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
     setError(null);
 
     try {
-      const processedFiles: { name: string; text: string }[] = [...uploadedFiles];
+      const processedFiles: UploadedPDF[] = [...uploadedFiles];
       
       for (const file of files) {
-        const result = await handleFile(file, processedFiles);
+        const result = await handleFile(file);
         if (result) {
           processedFiles.push(result);
         }
@@ -133,10 +136,8 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
       if (processedFiles.length > uploadedFiles.length) {
         setUploadedFiles(processedFiles);
         const combinedText = processedFiles.map(f => f.text).join('\n\n---\n\n');
-        const combinedNames = processedFiles.map(f => f.name).join(', ');
-        const namesArray = combinedNames ? combinedNames.split(',').map(n => n.trim()) : [];
-        savePDFs(combinedText, namesArray);
-        onPDFLoaded(combinedText, combinedNames);
+        const nameArray = processedFiles.map(f => f.name);
+        onPDFLoaded({ text: combinedText, fileNames: nameArray, files: processedFiles });
       }
     } finally {
       setIsProcessing(false);
@@ -157,14 +158,11 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
-        savePDFs("", []);
-        onPDFLoaded("", "");
+        onPDFLoaded({ text: "", fileNames: [], files: [] });
       } else {
         const combinedText = updatedFiles.map(f => f.text).join('\n\n---\n\n');
-        const combinedNames = updatedFiles.map(f => f.name).join(', ');
-        const namesArray = combinedNames ? combinedNames.split(',').map(n => n.trim()) : [];
-        savePDFs(combinedText, namesArray);
-        onPDFLoaded(combinedText, combinedNames);
+        const nameArray = updatedFiles.map(f => f.name);
+        onPDFLoaded({ text: combinedText, fileNames: nameArray, files: updatedFiles });
       }
     } else {
       // Remove all files
@@ -172,8 +170,7 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      savePDFs("", []);
-      onPDFLoaded("", "");
+      onPDFLoaded({ text: "", fileNames: [], files: [] });
     }
     setError(null);
   };

@@ -157,3 +157,54 @@ Ich kann dir auch eine Admin-Seite erstellen, wo du alle Gespräche einsehen kan
 - ✅ 2 GB Bandwidth
 - ✅ Für dieses Projekt völlig ausreichend
 
+
+## Company-spezifische Dokumente (PDFs)
+
+Damit du pro Unternehmen eigene PDFs hochladen und über einen individuellen Link teilen kannst, brauchst du eine zusätzliche Tabelle, einen Storage-Bucket und zwei neue Environment-Variablen.
+
+### Schritt 8: Tabelle `company_documents`
+
+```sql
+CREATE TABLE IF NOT EXISTS company_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id TEXT NOT NULL, -- slug, z.B. "acme"
+  display_name TEXT NOT NULL,
+  pdf_file_name TEXT NOT NULL,
+  pdf_file_url TEXT NOT NULL,
+  pdf_text TEXT NOT NULL, -- extrahierter Text für den Chat
+  uploaded_by TEXT,
+  uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_company_documents_company
+  ON company_documents(company_id);
+
+ALTER TABLE company_documents ENABLE ROW LEVEL SECURITY;
+
+-- Wenn du Supabase REST nur über den Service-Key nutzt, reicht eine „Allow all“-Policy:
+CREATE POLICY "Allow service role access" ON company_documents
+  FOR ALL
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+```
+
+### Schritt 9: Storage-Bucket `company-pdfs`
+
+1. Supabase Dashboard → **Storage** → **Create new bucket** → Name `company-pdfs`.
+2. Bucket **private** lassen (Benutzer sollen PDFs nicht direkt herunterladen).
+3. Optional: CORS-Regel hinzufügen (`https://ki-vergabe.de`, `https://trafosanf-remake.vercel.app`).
+
+### Schritt 10: Environment-Variablen für Company-Dokumente
+
+In Vercel → Project → **Settings → Environment Variables**:
+
+- `SUPABASE_SERVICE_ROLE_KEY` → den „service_role“-Key aus Supabase (nur Serverfunktionen nutzen!).  
+- `COMPANY_PDF_BUCKET` → `company-pdfs` (Bucket-Name als Variable, falls du ihn änderst).
+
+Environments: Production + Preview + Development. Danach neu deployen.
+
+Diese Variablen werden vom neuen API-Endpunkt `/api/company-docs` verwendet, um PDFs hochzuladen, Texte zu speichern und die Daten dem Chat zur Verfügung zu stellen.
+
+
+

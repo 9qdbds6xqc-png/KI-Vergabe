@@ -9,6 +9,7 @@ Intelligente Lösungen für Beschaffung - Chat-basierte Q&A-Plattform mit KI-Unt
 - 💬 Interaktive Chat-Oberfläche
 - 📊 Backlog-System zur Nachverfolgung aller Gespräche
 - 🔒 Preisinformationen werden über Kontaktformular angefordert
+- 🏷️ Sharebare Company-Links mit eigenen PDF-Sets (z. B. `https://ki-vergabe.de/?company=acme`)
 
 ## Tech Stack
 
@@ -47,9 +48,21 @@ Erstelle eine `.env` Datei im Root-Verzeichnis:
 
 ```env
 VITE_OPENAI_API_KEY=dein-openai-api-key
+VITE_AUTH_API_URL=https://trafosanf-remake.vercel.app/api/auth
+VITE_COMPANY_DOCS_API_URL=https://trafosanf-remake.vercel.app/api/company-docs
+VITE_ADMIN_TOKEN_SALT=ki-vergabe-admin-token
 ```
 
 Siehe `.env.example` für ein Beispiel.
+
+### Company-spezifische Links
+
+1. Öffne `/upload`, gib das Admin-Passwort ein und wähle oder erstelle ein Unternehmen (Slug + Anzeigename).
+2. Lade die PDFs hoch. Sie werden serverseitig in Supabase Storage gespeichert, der extrahierte Text landet in der Tabelle `company_documents`.
+3. Klicke auf „Company-Link aktualisieren“ – der Link (`https://ki-vergabe.de/?company=<slug>`) wird kopiert und kann geteilt werden.
+4. Empfänger sehen nur den Chat mit vorkonfigurierten Dokumenten. PDF-Dateien selbst bleiben verborgen.
+
+> 🔐 Für den Upload werden die Environment-Variablen `SUPABASE_SERVICE_ROLE_KEY`, `COMPANY_PDF_BUCKET` und `ADMIN_TOKEN_SALT` benötigt (siehe [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)).
 
 ## Deployment
 
@@ -86,6 +99,7 @@ src/
 
 - [Chat Setup Guide](./CHAT_SETUP.md)
 - [Deployment Guide](./DEPLOYMENT_KI_VERGABE.md)
+- [Supabase Setup inkl. Company-Dokumente](./SUPABASE_SETUP.md)
 
 ## Lizenz
 

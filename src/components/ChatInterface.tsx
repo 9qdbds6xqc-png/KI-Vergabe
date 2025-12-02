@@ -8,8 +8,9 @@ import { findRelevantSections } from "@/lib/pdfExtractor";
 import { PricingRequestDialog } from "./PricingRequestDialog";
 import { saveToBacklog } from "@/lib/backlog";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getPDFs } from "@/lib/pdfStorage";
+import { fetchCompanyDocuments } from "@/lib/companyDocs";
 
 interface Message {
   id: string;
@@ -24,6 +25,7 @@ interface ChatInterfaceProps {
 
 export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfaceProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -37,17 +39,53 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
   const [pdfFileNames, setPdfFileNames] = useState<string[]>([]);
   const [showPricingDialog, setShowPricingDialog] = useState(false);
   const [pendingPricingQuestion, setPendingPricingQuestion] = useState<string>("");
+  const [isCompanyLink, setIsCompanyLink] = useState(false);
+  const [companyDisplayName, setCompanyDisplayName] = useState<string | null>(null);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load PDFs from storage on mount
+  // Load PDFs either from shared company link or local storage
   useEffect(() => {
-    const pdfs = getPDFs();
-    if (pdfs && pdfs.text) {
-      setPdfContext(pdfs.text);
-      setPdfFileNames(pdfs.fileNames || []);
+    const params = new URLSearchParams(location.search);
+    const companyId = params.get("company");
+
+    if (companyId) {
+      setIsCompanyLink(true);
+      setIsLoadingDocs(true);
+      fetchCompanyDocuments(companyId)
+        .then((data) => {
+          setPdfContext(data.combinedText);
+          setPdfFileNames(data.fileNames || []);
+          setCompanyDisplayName(data.displayName);
+        })
+        .catch((error) => {
+          console.error("Company doc fetch error:", error);
+          toast({
+            title: "Dokumente konnten nicht geladen werden",
+            description:
+              error instanceof Error
+                ? error.message
+                : "Bitte wende dich an den Support.",
+            variant: "destructive",
+          });
+          setPdfContext("");
+          setPdfFileNames([]);
+          setCompanyDisplayName(null);
+        })
+        .finally(() => setIsLoadingDocs(false));
+    } else {
+      setIsCompanyLink(false);
+      const pdfs = getPDFs();
+      if (pdfs && pdfs.text) {
+        setPdfContext(pdfs.text);
+        setPdfFileNames(pdfs.fileNames || []);
+      } else {
+        setPdfContext("");
+        setPdfFileNames([]);
+      }
     }
-  }, []);
+  }, [location.search]);
 
   // Update welcome message when PDF is loaded
   useEffect(() => {
@@ -218,25 +256,27 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
                   Aktive Dokumente:
                 </span>
                 <span className="text-sm font-medium">
-                  {pdfFileNames.length === 1 
+                  {isCompanyLink
+                    ? companyDisplayName || "Freigegebenes Unternehmen"
+                    : pdfFileNames.length === 1
                     ? pdfFileNames[0]
-                    : `${pdfFileNames.length} Dokumente`
-                  }
+                    : `${pdfFileNames.length} Dokumente`}
                 </span>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // Check authentication before navigating
-                  if (window.confirm('Bitte Passwort eingeben, um Dokumente zu ändern.')) {
-                    navigate('/upload');
-                  }
-                }}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Dokumente ändern
-              </Button>
+              {!isCompanyLink && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (window.confirm("Bitte Passwort eingeben, um Dokumente zu ändern.")) {
+                      navigate("/upload");
+                    }
+                  }}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Dokumente ändern
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -245,26 +285,33 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
           <div className="border-b border-border p-4 bg-muted/30">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Keine Dokumente hochgeladen
+                {isCompanyLink ? "Dokumente konnten nicht geladen werden" : "Keine Dokumente hochgeladen"}
               </p>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  if (window.confirm('Bitte Passwort eingeben, um PDFs hochzuladen.')) {
-                    navigate('/upload');
-                  }
-                }}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                PDFs hochladen
-              </Button>
+              {!isCompanyLink && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    if (window.confirm("Bitte Passwort eingeben, um PDFs hochzuladen.")) {
+                      navigate("/upload");
+                    }
+                  }}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  PDFs hochladen
+                </Button>
+              )}
             </div>
           </div>
         )}
 
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {isLoadingDocs && (
+            <div className="text-center text-sm text-muted-foreground">
+              Dokumente werden geladen...
+            </div>
+          )}
           {messages.map((message) => (
             <ChatMessage
               key={message.id}
