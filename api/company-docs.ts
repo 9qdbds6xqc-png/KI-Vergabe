@@ -145,7 +145,7 @@ const fetchCompanyDocs = async (companyId: string): Promise<CompanyDocRow[]> => 
     throw new Error(details || response.statusText);
   }
 
-  return (await response.json()) as CompanyListRow[];
+  return (await response.json()) as CompanyDocRow[];
 };
 
 const fetchCompanies = async (): Promise<CompanyListRow[]> => {
@@ -164,7 +164,7 @@ const fetchCompanies = async (): Promise<CompanyListRow[]> => {
     throw new Error(details || response.statusText);
   }
 
-  return response.json();
+  return (await response.json()) as CompanyListRow[];
 };
 
 const expectedAdminToken = getExpectedAdminToken();
@@ -283,7 +283,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await deleteCompanyRows(sanitizedCompanyId);
       }
 
-      const rows: CompanyDocRow[] = [];
+      const rows: InsertRow[] = [];
       for (const file of files) {
         if (!file?.name || !file?.base64 || !file?.text) {
           return withError(res, 400, 'Each file requires name, base64, and text');
