@@ -12,19 +12,22 @@ const SUPABASE_TABLE = process.env.SUPABASE_TABLE || 'backlog_entries';
 const getAllowedOrigin = (origin: string | undefined): string => {
   if (!origin) return '*';
   
-  // Allow ki-vergabe.de and its subdomains (including www)
-  if (origin.includes('ki-vergabe.de')) {
-    return origin;
+  // Normalize origin (remove trailing slash, handle http/https)
+  const normalizedOrigin = origin.replace(/\/$/, '');
+  
+  // Allow ki-vergabe.de (both http and https)
+  if (normalizedOrigin.includes('ki-vergabe.de')) {
+    return normalizedOrigin;
   }
   
   // Allow localhost for development
-  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-    return origin;
+  if (normalizedOrigin.includes('localhost') || normalizedOrigin.includes('127.0.0.1')) {
+    return normalizedOrigin;
   }
   
   // Allow GitHub Pages domain
-  if (origin.includes('github.io')) {
-    return origin;
+  if (normalizedOrigin.includes('github.io')) {
+    return normalizedOrigin;
   }
   
   // Default: allow all origins (for development)
@@ -51,8 +54,12 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ) {
-  // Get origin from request
-  const origin = req.headers.origin || req.headers.referer;
+  // Get origin from request (check multiple headers)
+  const origin = req.headers.origin || 
+                 req.headers.referer?.replace(/\/[^/]*$/, '') || 
+                 req.headers['x-forwarded-host'] ||
+                 undefined;
+  
   const allowedOrigin = getAllowedOrigin(origin);
   
   // ALWAYS set CORS headers first, before any other logic
@@ -62,8 +69,14 @@ export default async function handler(
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
   
+  // Log for debugging
+  console.log('Request method:', req.method);
+  console.log('Origin:', origin);
+  console.log('Allowed origin:', allowedOrigin);
+  
   // Handle CORS preflight OPTIONS request
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
     return res.status(200).end();
   }
 
