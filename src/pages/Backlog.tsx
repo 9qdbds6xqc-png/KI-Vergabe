@@ -86,6 +86,10 @@ const Backlog = () => {
     return matchesSearch && matchesPDF;
   });
 
+  if (!authenticated) {
+    return <PasswordProtection onSuccess={() => setAuthenticated(true)} pageName="Backlog" />;
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
