@@ -169,12 +169,33 @@ async function handleSupabase(req: VercelRequest, res: VercelResponse) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Supabase error:', errorText);
+        console.error('=== Supabase Error ===');
+        console.error('Status:', response.status);
+        console.error('Status Text:', response.statusText);
+        console.error('Error Text:', errorText);
+        console.error('Supabase URL:', SUPABASE_URL);
+        console.error('Table:', SUPABASE_TABLE);
+        console.error('Request Body:', JSON.stringify({
+          session_id: entry.sessionId,
+          company_id: entry.companyId || null,
+          timestamp: new Date(entry.timestamp || Date.now()).toISOString(),
+          pdf_file_name: entry.pdfFileName || null,
+          question: entry.question,
+          answer: entry.answer,
+          is_pricing_question: entry.isPricingQuestion || false,
+          error: entry.error || null,
+        }, null, 2));
+        console.error('====================');
+        
+        // Return more detailed error
         return res.status(response.status).json({ 
           error: 'Failed to save entry', 
-          details: errorText,
-          supabaseUrl: SUPABASE_URL,
-          table: SUPABASE_TABLE
+          details: errorText || 'No error details provided',
+          status: response.status,
+          statusText: response.statusText,
+          supabaseUrl: SUPABASE_URL ? 'SET' : 'NOT SET',
+          table: SUPABASE_TABLE,
+          hasSupabaseKey: !!SUPABASE_KEY
         });
       }
 
