@@ -15,10 +15,16 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Enable CORS - Allow requests from ki-vergabe.de
+  const origin = req.headers.origin;
+  const allowedOrigin = origin && (origin.includes('ki-vergabe.de') || origin.includes('localhost') || origin.includes('github.io'))
+    ? origin
+    : '*';
+  
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   // Handle preflight
   if (req.method === 'OPTIONS') {

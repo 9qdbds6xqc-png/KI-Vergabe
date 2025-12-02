@@ -8,25 +8,45 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_TABLE = process.env.SUPABASE_TABLE || 'backlog_entries';
 
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+// CORS headers - Allow requests from ki-vergabe.de and localhost
+const getAllowedOrigin = (origin: string | undefined): string => {
+  if (!origin) return '*';
+  
+  // Allow ki-vergabe.de and its subdomains
+  if (origin.includes('ki-vergabe.de')) {
+    return origin;
+  }
+  
+  // Allow localhost for development
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    return origin;
+  }
+  
+  // Allow GitHub Pages domain
+  if (origin.includes('github.io')) {
+    return origin;
+  }
+  
+  return '*';
 };
 
 // Handle CORS preflight
-const handleCORS = (res: VercelResponse) => {
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.setHeader(key, value);
-  });
+const handleCORS = (req: VercelRequest, res: VercelResponse) => {
+  const origin = req.headers.origin;
+  const allowedOrigin = getAllowedOrigin(origin);
+  
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
 };
 
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ) {
-  handleCORS(res);
+  handleCORS(req, res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
