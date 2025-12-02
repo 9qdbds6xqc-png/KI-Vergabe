@@ -52,16 +52,11 @@ export const ChatInterface = ({ pdfContext: initialPDFContext }: ChatInterfacePr
   // Update welcome message when PDF is loaded
   useEffect(() => {
     if (pdfContext && pdfContext.trim().length > 0) {
-      const fileNamesText = pdfFileNames.length > 0 
-        ? pdfFileNames.length === 1 
-          ? `dem Dokument "${pdfFileNames[0]}"`
-          : `den Dokumenten: ${pdfFileNames.join(', ')}`
-        : "dem Dokument";
       setMessages([
         {
           id: "1",
           role: "assistant",
-          content: `PDF(s) erfolgreich geladen! Ich kann jetzt Fragen basierend auf ${fileNamesText} beantworten. Was möchten Sie wissen?`,
+          content: `PDF(s) erfolgreich geladen! Ich kann jetzt Fragen basierend auf den hochgeladenen Dokumenten beantworten. Was möchten Sie wissen?`,
         },
       ]);
     }
