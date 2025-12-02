@@ -35,11 +35,25 @@ Diese Anleitung führt dich durch das komplette Setup von Supabase für die Back
 
 ## Schritt 3: Datenbank-Tabelle erstellen
 
+### Schritt 3.1: Zum SQL Editor navigieren
+
 1. **Im Supabase Dashboard:** Warte bis "Your project is ready" erscheint
 2. **Klicke:** "Continue to project" oder gehe zum Dashboard
-3. **Links im Menü:** Klicke auf **"SQL Editor"** (Icon: </>)
-4. **Klicke:** "New query" (rechts oben)
+3. **Links im Menü:** Klicke auf **"SQL Editor"**
+   - Das ist ein Icon das wie `</>` aussieht (Code-Symbol)
+   - Oder du siehst den Text "SQL Editor"
+
+### Schritt 3.2: Neue Query erstellen
+
+4. **Klicke:** "New query" (rechts oben, grüner Button)
+   - Du siehst jetzt einen leeren Code-Editor
+
+### Schritt 3.3: SQL-Code einfügen
+
 5. **Füge diesen SQL-Code ein:**
+   - Kopiere den kompletten Code (siehe unten)
+   - Klicke in das Textfeld im SQL Editor
+   - Füge den Code ein (`Cmd+V` / `Ctrl+V`)
 
 ```sql
 -- Create backlog entries table
@@ -71,8 +85,29 @@ CREATE POLICY "Allow all operations" ON backlog_entries
   WITH CHECK (true);
 ```
 
-6. **Klicke:** "Run" (rechts unten, oder drücke `Ctrl+Enter` / `Cmd+Enter`)
-7. **Prüfe:** Du solltest "Success. No rows returned" sehen
+### Schritt 3.4: Code ausführen
+
+6. **Klicke:** "Run" Button (rechts unten, grün)
+   - **Oder:** Drücke `Ctrl+Enter` (Windows) oder `Cmd+Enter` (Mac)
+   - Warte 1-2 Sekunden
+
+### Schritt 3.5: Erfolg prüfen
+
+7. **Du solltest sehen:**
+   - ✅ Unten: "Success. No rows returned" (grüne Meldung)
+   - ✅ Keine Fehlermeldungen
+
+### Schritt 3.6: Tabelle verifizieren
+
+8. **Prüfe ob die Tabelle erstellt wurde:**
+   - Links im Menü: Klicke auf **"Table Editor"** (Tabellen-Icon)
+   - Du solltest eine neue Tabelle sehen: `backlog_entries`
+   - Die Tabelle ist leer (noch keine Daten - das ist normal!)
+
+**Falls die Tabelle nicht erscheint:**
+- Gehe zurück zum SQL Editor
+- Prüfe ob du "Success" gesehen hast
+- Versuche den Code nochmal auszuführen (kein Problem, kann mehrmals laufen)
 
 ---
 
