@@ -10,11 +10,6 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
   // Enable CORS - Allow requests from ki-vergabe.de
   const origin = req.headers.origin;
   const allowedOrigin = origin && (origin.includes('ki-vergabe.de') || origin.includes('localhost') || origin.includes('github.io'))
@@ -26,9 +21,14 @@ export default async function handler(
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  // Handle preflight
+  // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
