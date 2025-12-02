@@ -16,7 +16,7 @@ const Questions = () => {
             Sprich mit unserem Produkt
           </h1>
           <p className="text-muted-foreground text-center max-w-2xl">
-            Stelle technische oder allgemeine Fragen, um mehr über unser Produkt herauszufinden. Wenn sie mehr wissen wo
+            Stellen Sie technische oder allgemeine Fragen, um mehr über unser Produkt zu erfahren. Wenn Sie anschließend Kontakt aufnehmen möchten, schreiben Sie einfach, dass Sie eine Nachricht versenden wollen. Unser Kundendienst erhält dann automatisch den Kontext dieser Unterhaltung und kann ein passendes Angebot für Sie vorbereiten.
           </p>
         </div>
 
