@@ -88,6 +88,8 @@ export const PDFUpload = ({ onPDFLoaded, currentPDFNames = [], className }: PDFU
         setUploadedFiles(processedFiles);
         const combinedText = processedFiles.map(f => f.text).join('\n\n---\n\n');
         const combinedNames = processedFiles.map(f => f.name).join(', ');
+        const namesArray = combinedNames ? combinedNames.split(',').map(n => n.trim()) : [];
+        savePDFs(combinedText, namesArray);
         onPDFLoaded(combinedText, combinedNames);
       }
     } finally {
