@@ -15,7 +15,8 @@ export interface BacklogEntry {
 
 const BACKLOG_KEY = 'chat_backlog';
 const MAX_BACKLOG_ENTRIES = 1000;
-const API_URL = import.meta.env.VITE_BACKLOG_API_URL || '';
+const DEFAULT_BACKLOG_API_URL = 'https://trafosanf-remake.vercel.app/api/backlog';
+const API_URL = import.meta.env.VITE_BACKLOG_API_URL || DEFAULT_BACKLOG_API_URL;
 
 // Generate a UUID with fallback for browsers that don't support crypto.randomUUID
 function generateUUID(): string {
