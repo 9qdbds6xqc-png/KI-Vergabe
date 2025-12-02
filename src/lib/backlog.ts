@@ -89,6 +89,8 @@ const saveToDatabase = async (entry: Omit<BacklogEntry, 'id' | 'timestamp'>) => 
     // API_URL already includes /api/backlog, so we POST directly to it
     const response = await fetch(API_URL, {
       method: 'POST',
+      mode: 'cors', // Explicitly enable CORS
+      credentials: 'omit', // Don't send credentials
       headers: {
         'Content-Type': 'application/json',
       },
